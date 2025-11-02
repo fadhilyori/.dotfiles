@@ -1,249 +1,265 @@
 #!/bin/bash
 
-# This script is used to setup my personal environment
-# It will install dependencies and run stow command to create symlinks
-# It will also install bash-it and nanorc if they are not installed
+set -euo pipefail
 
-# Print usage if --help or -h is used
-if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-    printf "Usage: setup.sh [--force]\n"
-    printf "  --force  Force run as root\n"
-    printf "  --help   Display this help message\n"
-    exit 0
-fi
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
 
-# This script should run on non-root user, use --force to force run as root
-if [ "$EUID" -eq 0 ] && [ "$1" != "--force" ]; then
-    printf "=> Error: This script should not be run as root\n"
-    exit 1
-fi
+log_info() { printf "${BLUE}[INFO]${NC} %s\n" "$*"; }
+log_success() { printf "${GREEN}[SUCCESS]${NC} %s\n" "$*"; }
+log_error() { printf "${RED}[ERROR]${NC} %s\n" "$*"; }
+log_warning() { printf "${YELLOW}[WARNING]${NC} %s\n" "$*"; }
 
-# Install dependencies for different Linux distributions if they are not installed
-# Package to install: stow nano git curl wget unzip zip htop zoxide bat eza diff-so-fancy zsh oh-my-posh bash-it nanorc direnv
+command_exists() { command -v "$1" >/dev/null 2>&1; }
 
-# Check if zsh is installed
-if ! command -v zsh >/dev/null; then
-    printf "=> Error: zsh is not installed\n"
-    # Install zsh for different Linux distributions
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        if [ "$ID" = "opensuse-tumbleweed" ]; then
-            sudo zypper install zsh
-        elif [ "$ID" = "ubuntu" ] || [ "$ID" = "debian" ]; then
-            sudo apt install zsh
+# Parse arguments
+AUTO_SETUP=false
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -s|--auto-setup) AUTO_SETUP=true; shift ;;
+        -h|--help)
+            echo "Usage: $0 [-s] [-h]"
+            echo "  -s  Auto-setup bash and nano configurations"
+            echo "  -h  Show this help"
+            exit 0
+            ;;
+        *) log_error "Unknown option: $1"; exit 1 ;;
+    esac
+done
+
+# Install system packages
+install_packages() {
+    log_info "Installing required packages"
+    local packages=("git" "curl" "stow")
+
+    if command -v apt >/dev/null 2>&1; then
+        sudo apt update && sudo apt install -y "${packages[@]}"
+    else
+        log_error "Unsupported system: apt package manager required"
+        exit 1
+    fi
+}
+
+# Install optional development tools
+install_optional_tools() {
+    log_info "Installing optional development tools"
+
+    # Install FZF
+    if ! command_exists fzf; then
+        log_info "Installing FZF..."
+        sudo apt install -y fzf
+    else
+        log_success "FZF already installed"
+    fi
+
+    # Install Bat
+    if ! command_exists batcat; then
+        log_info "Installing Bat..."
+        sudo apt install -y bat
+    else
+        log_success "Bat already installed"
+    fi
+
+    # Install Ripgrep
+    if ! command_exists rg; then
+        log_info "Installing Ripgrep..."
+        sudo apt-get install -y ripgrep
+    else
+        log_success "Ripgrep already installed"
+    fi
+
+    # Install git delta
+    if ! command_exists delta; then
+        log_info "Installing git delta..."
+        sudo apt install -y git-delta
+    else
+        log_success "git delta already installed"
+    fi
+
+    # Install tree
+    if ! command_exists tree; then
+        log_info "Installing tree..."
+        sudo apt install -y tree
+    else
+        log_success "tree already installed"
+    fi
+
+    # Install dnsutils (for dig command)
+    if ! command_exists dig; then
+        log_info "Installing dnsutils..."
+        sudo apt install -y dnsutils
+    else
+        log_success "dnsutils already installed"
+    fi
+}
+
+# Install fonts
+install_fonts() {
+    log_info "Installing fonts"
+
+    local fonts=(
+        "fonts-adobe-sourcesans3"
+        "fonts-cantarell"
+        "fonts-cascadia-code"
+        "fonts-dejavu-core"
+        "fonts-firacode"
+        "fonts-font-awesome"
+        "fonts-inter"
+        "fonts-jetbrains-mono"
+        "fonts-noto"
+    )
+
+    log_info "Installing fonts using apt..."
+    sudo apt update
+    sudo apt install -y "${fonts[@]}"
+
+    # Refresh font cache
+    if command -v fc-cache >/dev/null 2>&1; then
+        fc-cache -f -v
+        log_success "Font cache refreshed"
+    fi
+
+    log_success "Fonts installation completed"
+}
+
+# Clone or update dotfiles
+setup_dotfiles() {
+    if [ ! -d "$HOME/.dotfiles" ]; then
+        log_info "Cloning dotfiles repository"
+        git clone --depth=1 https://github.com/fadhilyori/.dotfiles.git "$HOME/.dotfiles"
+        log_success "Dotfiles cloned successfully"
+    else
+        log_info "Updating dotfiles"
+        cd "$HOME/.dotfiles" || exit 1
+        if git pull origin main; then
+            log_success "Dotfiles updated successfully"
+        else
+            log_warning "Failed to update dotfiles"
         fi
     fi
-fi
+}
 
-# Check if direnv is installed
-if ! command -v direnv >/dev/null; then
-    printf "=> Error: direnv is not installed\n"
-    # Install direnv for different Linux distributions
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        if [ "$ID" = "opensuse-tumbleweed" ]; then
-            sudo zypper install direnv
-        elif [ "$ID" = "ubuntu" ] || [ "$ID" = "debian" ]; then
-            sudo apt install direnv
+# Configure .bashrc if requested
+setup_bashrc() {
+    if [ "$AUTO_SETUP" = true ]; then
+        log_info "Configuring .bashrc"
+
+        if grep -q "DOTFILES_CONFIG" "$HOME/.bashrc" 2>/dev/null; then
+            log_warning "Dotfiles already configured in .bashrc"
+            return 0
         fi
+
+        # Add configuration to .bashrc
+        cat >> "$HOME/.bashrc" << 'EOF'
+
+# DOTFILES_CONFIG - Load dotfiles configuration
+if [ -f "$HOME/.dotfiles/.bash_config" ]; then
+    . "$HOME/.dotfiles/.bash_config"
+fi
+EOF
+
+        log_success "Added dotfiles configuration to .bashrc"
     fi
-fi
+}
 
-# Check if Oh My Posh is installed
-# Install command: curl -s https://ohmyposh.dev/install.sh | bash -s -- -d ~/bin
-if ! command -v oh-my-posh >/dev/null; then
-    printf "=> Error: oh-my-posh is not installed\n"
-    # Install oh-my-posh
-    printf "=> Installing oh-my-posh...\n"
-    curl -s https://ohmyposh.dev/install.sh | bash -s -- -d ~/bin
-    printf "=> Installing oh-my-posh...done\n\n"
-fi
+# Configure .nanorc if requested
+setup_nanorc() {
+    if [ "$AUTO_SETUP" = true ]; then
+        log_info "Configuring .nanorc"
 
-# Check if git is installed
-if ! command -v git >/dev/null; then
-    printf "=> Error: git is not installed\n"
-    # Install git for different Linux distributions
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        if [ "$ID" = "opensuse-tumbleweed" ]; then
-            sudo zypper install git
-        elif [ "$ID" = "ubuntu" ] || [ "$ID" = "debian" ]; then
-            sudo apt install git
+        if grep -q "~/.dotfiles/.nanorc" "$HOME/.nanorc" 2>/dev/null; then
+            log_warning "Dotfiles already configured in .nanorc"
+            return 0
         fi
-    fi
-fi
 
-# Check if stow is installed
-if ! command -v stow >/dev/null; then
-    printf "=> Error: stow is not installed\n"
-    # Install stow for different Linux distributions
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        if [ "$ID" = "opensuse-tumbleweed" ]; then
-            sudo zypper install stow
-        elif [ "$ID" = "ubuntu" ] || [ "$ID" = "debian" ]; then
-            sudo apt install stow
+        # Add configuration to .nanorc
+        cat >> "$HOME/.nanorc" << 'EOF'
+
+# DOTFILES_NANO - Load dotfiles nano configuration
+include "~/.dotfiles/.nanorc"
+EOF
+
+        log_success "Added dotfiles configuration to .nanorc"
+    fi
+}
+
+# Create necessary directories
+setup_directories() {
+    log_info "Creating necessary directories"
+    
+    # Create nano backup directory
+    mkdir -p "$HOME/.cache/nano/backups"
+    
+    # Create bin directory if it doesn't exist
+    mkdir -p "$HOME/bin"
+}
+
+# Create symlinks
+setup_symlinks() {
+    log_info "Creating symlinks"
+    cd "$HOME/.dotfiles"
+
+    if stow . -t "$HOME" --no-folding --adopt 2>/dev/null; then
+        log_success "Symlinks created successfully"
+    else
+        log_error "Failed to create symlinks"
+        return 1
+    fi
+}
+
+# Main function
+main() {
+    log_info "Starting dotfiles setup"
+
+    # Check dependencies
+    local need_packages=false
+    for cmd in git curl; do
+        if ! command_exists "$cmd"; then
+            need_packages=true
+            break
         fi
+    done
+
+    if [ "$need_packages" = true ] || ! command_exists stow; then
+        install_packages
     fi
-fi
 
-# Check if nano is installed
-if ! command -v nano >/dev/null; then
-    printf "=> Error: nano is not installed\n"
-    # Install nano for different Linux distributions
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        if [ "$ID" = "opensuse-tumbleweed" ]; then
-            sudo zypper install nano
-        elif [ "$ID" = "ubuntu" ] || [ "$ID" = "debian" ]; then
-            sudo apt install nano
-        fi
+    # Install optional development tools
+    install_optional_tools
+
+    # Install fonts
+    install_fonts
+
+    setup_dotfiles
+    setup_directories
+    setup_bashrc
+    setup_nanorc
+    setup_symlinks
+
+    printf '\n%s\n' "${GREEN}Setup completed!${NC}"
+
+    if [ "$AUTO_SETUP" = true ]; then
+        printf "✅ .bashrc and .nanorc configured automatically\n"
+        printf "Next step: Reload shell with 'exec \$SHELL' or 'source ~/.bashrc'\n"
+    else
+        printf "Next steps:\n"
+        printf "1. Add this to ~/.bashrc:\n"
+        printf "   # DOTFILES_CONFIG - Load dotfiles configuration\n"
+        printf "   if [ -f \"\$HOME/.dotfiles/.bash_config\" ]; then\n"
+        printf "       . \"\$HOME/.dotfiles/.bash_config\"\n"
+        printf "   fi\n\n"
+        printf "2. For nano editor, add this to ~/.nanorc:\n"
+        printf "   include \"~/.dotfiles/.nanorc\"\n\n"
+        printf "3. Reload shell with 'exec \$SHELL' or 'source ~/.bashrc'\n"
+        printf "💡 Tip: Use -s flag next time to auto-setup bash and nano\n"
     fi
-fi
 
-# Check if curl is installed
-if ! command -v curl >/dev/null; then
-    printf "=> Error: curl is not installed\n"
-    # Install curl for different Linux distributions
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        if [ "$ID" = "opensuse-tumbleweed" ]; then
-            sudo zypper install curl
-        elif [ "$ID" = "ubuntu" ] || [ "$ID" = "debian" ]; then
-            sudo apt install curl
-        fi
-    fi
-fi
+    log_success "Done!"
+}
 
-# Check if wget is installed
-if ! command -v wget >/dev/null; then
-    printf "=> Error: wget is not installed\n"
-    # Install wget for different Linux distributions
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        if [ "$ID" = "opensuse-tumbleweed" ]; then
-            sudo zypper install wget
-        elif [ "$ID" = "ubuntu" ] || [ "$ID" = "debian" ]; then
-            sudo apt install wget
-        fi
-    fi
-fi
-
-# Check if unzip and zip is installed
-if ! command -v unzip >/dev/null || ! command -v zip >/dev/null; then
-    printf "=> Error: unzip or zip is not installed\n"
-    # Install unzip and zip for different Linux distributions
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        if [ "$ID" = "opensuse-tumbleweed" ]; then
-            sudo zypper install unzip zip
-        elif [ "$ID" = "ubuntu" ] || [ "$ID" = "debian" ]; then
-            sudo apt install unzip zip
-        fi
-    fi
-fi
-
-# Check if htop is installed
-if ! command -v htop >/dev/null; then
-    printf "=> Error: htop is not installed\n"
-    # Install htop for different Linux distributions
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        if [ "$ID" = "opensuse-tumbleweed" ]; then
-            sudo zypper install htop
-        elif [ "$ID" = "ubuntu" ] || [ "$ID" = "debian" ]; then
-            sudo apt install htop
-        fi
-    fi
-fi
-
-# Check if zoxide is installed
-if ! command -v z >/dev/null; then
-    printf "=> Error: zoxide is not installed\n"
-    # Install zoxide
-    printf "=> Installing zoxide...\n"
-    curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash
-    printf "=> Installing zoxide...done\n\n"
-fi
-
-# Check if bat is installed
-if ! command -v bat >/dev/null; then
-    printf "=> Error: bat is not installed\n"
-    # Install bat for different Linux distributions
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        if [ "$ID" = "opensuse-tumbleweed" ]; then
-            sudo zypper install bat
-        elif [ "$ID" = "ubuntu" ] || [ "$ID" = "debian" ]; then
-            sudo apt install bat
-        fi
-    fi
-fi
-
-# Check if eza is installed
-if ! command -v eza >/dev/null; then
-    printf "=> Error: eza is not installed\n"
-    # Install eza
-    printf "=> Installing eza...\n"
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        if [ "$ID" = "opensuse-tumbleweed" ]; then
-            sudo zypper install eza
-        elif [ "$ID" = "ubuntu" ] || [ "$ID" = "debian" ]; then
-            sudo mkdir -p /etc/apt/keyrings
-            wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
-            echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" | sudo tee /etc/apt/sources.list.d/gierens.list
-            sudo chmod 644 /etc/apt/keyrings/gierens.gpg /etc/apt/sources.list.d/gierens.list
-            sudo apt update
-            sudo apt install -y eza
-        fi
-    fi
-    printf "=> Installing eza...done\n\n"
-fi
-
-# Check if diff-so-fancy is installed
-# https://github.com/so-fancy/diff-so-fancy
-# URL: https://github.com/so-fancy/diff-so-fancy/releases/download/v1.4.4/diff-so-fancy
-if ! command -v diff-so-fancy >/dev/null; then
-    printf "=> Error: diff-so-fancy is not installed\n"
-    # Install diff-so-fancy
-    printf "=> Installing diff-so-fancy...\n"
-    curl -sSL https://github.com/so-fancy/diff-so-fancy/releases/download/v1.4.4/diff-so-fancy >~/bin/diff-so-fancy
-    chmod +x ~/bin/diff-so-fancy
-    printf "=> Installing diff-so-fancy...done\n\n"
-fi
-
-# Clone this repository if it is not cloned to ~/dotfiles
-if [ ! -d ~/dotfiles ]; then
-    printf "=> Cloning dotfiles...\n"
-    git clone --depth=1 https://github.com/fadhilyori/dotfiles.git ~/dotfiles
-    printf "=> Cloning dotfiles...done\n\n"
-fi
-
-# Install bash-it if it is not installed
-# https://github.com/Bash-it/bash-it
-if [ ! -d ~/.bash_it ]; then
-    printf "=> Installing bash-it...\n"
-    git clone --depth=1 https://github.com/Bash-it/bash-it.git ~/.bash_it
-    ~/.bash_it/install.sh --silent
-    printf "=> Installing bash-it...done\n\n"
-fi
-
-# Install nanorc if it is not installed
-# https://github.com/scopatz/nanorc
-if [ ! -d ~/.nano ]; then
-    printf "=> Installing nanorc...\n"
-    curl https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh | sh
-    printf "=> Installing nanorc...done\n\n"
-fi
-
-# Make directory
-mkdir -p ~/bin ~/.config/htop ~/.bash_it/aliases ~/.ssh ~/Projects/Trustmedis ~/.poshthemes
-
-# Run stow command
-stow . -t ~
-
-# Show message to reload bash or open new terminal
-printf "=> Please reload bash or open new terminal\n"
-printf "=> You can also run the following command to reload bash\n"
-printf "  source ~/.bashrc\n"
+main "$@"

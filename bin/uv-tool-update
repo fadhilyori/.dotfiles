@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# UV Tool Updater
+
+# Check if uv is available
+if ! command -v uv &> /dev/null; then
+    echo "Error: uv is not installed or not in PATH" >&2
+    exit 1
+fi
+
+echo "=== UV Tool Updater ==="
+echo "Checking for installed UV tools..."
+
+# Get list of installed tools
+tools_output=$(uv tool list 2>/dev/null || true)
+
+if [[ -z "$tools_output" ]]; then
+    echo "No UV tools found."
+    echo ""
+    echo "Install tools with: uv tool install <tool-name>"
+    exit 0
+fi
+
+# Parse tool names - only main tools, not aliases
+tool_names=()
+while IFS= read -r line; do
+    # Skip empty lines and aliases (lines starting with '-')
+    if [[ -z "$line" ]] || [[ "$line" =~ ^[\s]*- ]]; then
+        continue
+    fi
+
+    # Extract tool name (first column) - main tools have version numbers
+    tool_name=$(echo "$line" | awk '{print $1}')
+    if [[ -n "$tool_name" ]]; then
+        tool_names+=("$tool_name")
+    fi
+done <<< "$tools_output"
+
+if [[ ${#tool_names[@]} -eq 0 ]]; then
+    echo "No UV tools found or unable to parse tool list."
+    exit 0
+fi
+
+echo "Found ${#tool_names[@]} UV tool(s)"
+echo ""
+
+# Display tools
+echo "Tools to update:"
+for i in "${!tool_names[@]}"; do
+    printf "  %d. %s\n" $((i+1)) "${tool_names[i]}"
+done
+echo ""
+
+# Update all tools
+echo "Starting UV tool updates..."
+echo ""
+
+# Run uv tool upgrade --all
+if uv tool upgrade --all; then
+    echo ""
+    echo "✓ All UV tools updated successfully!"
+else
+    echo ""
+    echo "✗ Failed to update UV tools"
+    echo ""
+    echo "Tip: Check your internet connection and try again"
+    exit 1
+fi
