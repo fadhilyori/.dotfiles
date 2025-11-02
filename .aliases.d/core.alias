@@ -71,9 +71,9 @@ alias gfhf='git flow hotfix finish'        # flow hotfix finish
 alias dps='docker ps -a'                   # docker ps all containers
 alias dimg='docker images'                 # docker images
 alias drun='docker run -it --rm'           # docker run interactive, remove on exit
-alias dstop='docker stop $(docker ps -q)'  # stop all running containers
-alias drma='docker rm $(docker ps -aq)'    # remove all containers
-alias drmi='docker rmi $(docker images -f "dangling=true" -q)'  # remove dangling images
+alias dstop='[ -n "$(docker ps -q)" ] && docker stop $(docker ps -q) || echo "No running containers"'  # stop all running containers
+alias drma='[ -n "$(docker ps -aq)" ] && docker rm $(docker ps -aq) || echo "No containers to remove"'    # remove all containers
+alias drmi='[ -n "$(docker images -f "dangling=true" -q)" ] && docker rmi $(docker images -f "dangling=true" -q) || echo "No dangling images to remove"'  # remove dangling images
 alias dvol='docker volume ls'              # list volumes
 alias dnet='docker network ls'             # list networks
 alias dexec='docker exec -it'              # docker exec interactive

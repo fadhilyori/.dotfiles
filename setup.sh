@@ -149,6 +149,12 @@ setup_bashrc() {
     if [ "$AUTO_SETUP" = true ]; then
         log_info "Configuring .bashrc"
 
+        # Check if .bashrc exists, create it if it doesn't
+        if [ ! -f "$HOME/.bashrc" ]; then
+            log_info ".bashrc not found, creating new file"
+            touch "$HOME/.bashrc"
+        fi
+
         if grep -q "DOTFILES_CONFIG" "$HOME/.bashrc" 2>/dev/null; then
             log_warning "Dotfiles already configured in .bashrc"
             return 0
@@ -172,7 +178,13 @@ setup_nanorc() {
     if [ "$AUTO_SETUP" = true ]; then
         log_info "Configuring .nanorc"
 
-        if grep -q "~/.dotfiles/.nanorc" "$HOME/.nanorc" 2>/dev/null; then
+        # Check if .nanorc exists, create it if it doesn't
+        if [ ! -f "$HOME/.nanorc" ]; then
+            log_info ".nanorc not found, creating new file"
+            touch "$HOME/.nanorc"
+        fi
+
+        if grep -q "$HOME/.dotfiles/.nanorc" "$HOME/.nanorc" 2>/dev/null; then
             log_warning "Dotfiles already configured in .nanorc"
             return 0
         fi
@@ -204,7 +216,7 @@ setup_symlinks() {
     log_info "Creating symlinks"
     cd "$HOME/.dotfiles"
 
-    if stow . -t "$HOME" --no-folding --adopt 2>/dev/null; then
+    if stow . -t "$HOME" --no-folding 2>/dev/null; then
         log_success "Symlinks created successfully"
     else
         log_error "Failed to create symlinks"

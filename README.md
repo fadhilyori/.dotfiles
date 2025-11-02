@@ -148,16 +148,11 @@ art serve       # php artisan serve
 source ~/.dotfiles/.bash_config
 ```
 
-**Missing tools?**
-```bash
-./setup.sh -y  # Install all optional tools
-```
-
 **Stow issues?**
 ```bash
 cd ~/.dotfiles
 stow -D . -t "$HOME"  # Remove symlinks
-stow . -t "$HOME" --no-folding --adopt  # Recreate
+stow . -t "$HOME" --no-folding  # Recreate
 ```
 
 ## Customization
