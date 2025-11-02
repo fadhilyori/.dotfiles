@@ -1,0 +1,46 @@
+theme = Andromeda
+window-height=24
+window-width=120
+background-opacity = 0.85
+background-blur = true
+
+quick-terminal-position = top
+quick-terminal-size = 30%,80%
+
+window-decoration = client
+window-padding-balance = true
+window-padding-x = 5
+window-padding-y = 0
+
+font-family = "JetBrains Mono"
+font-size = 10
+font-feature = +liga
+font-thicken = true
+link-url = true
+
+adjust-cell-height = 35%
+mouse-hide-while-typing = true
+mouse-scroll-multiplier = 2
+
+cursor-style = block
+cursor-style-blink = true
+
+shell-integration-features = no-cursor,sudo,title
+
+# Keybinds
+keybind = global:ctrl+grave_accent=toggle_quick_terminal
+
+keybind = shift+ctrl+\=new_split:right
+keybind = shift+ctrl+-=new_split:down
+
+keybind = shift+ctrl+j=goto_split:bottom
+keybind = shift+ctrl+k=goto_split:top
+keybind = shift+ctrl+h=goto_split:left
+keybind = shift+ctrl+l=goto_split:right
+
+keybind = shift+ctrl+z=toggle_split_zoom
+keybind = shift+ctrl+e=equalize_splits
+
+keybind = performable:ctrl+c=copy_to_clipboard
+
+keybind = shift+enter=text:\n

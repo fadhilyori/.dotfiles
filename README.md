@@ -1,45 +1,182 @@
-# Personal Dotfiles
+# dotfiles
+
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Shell: Bash](https://img.shields.io/badge/Shell-Bash-4EAA25?logo=gnu-bash)
+![Platform: Linux](https://img.shields.io/badge/Platform-Linux-FCC624?logo=linux)
 
 This repository contains my personal dotfiles and configurations for my development environment. The dotfiles and configurations are managed using [GNU Stow](https://www.gnu.org/software/stow/).
 
-# Features
-Tools will be installed and configured:
-- [Bash](https://www.gnu.org/software/bash/)
-- [GNU Stow](https://www.gnu.org/software/stow/)
-- [Bash-it](https://github.com/Bash-it/bash-it)
-- [Nano](https://www.nano-editor.org/)
-- [Htop](https://htop.dev/)
-- [Curl](https://curl.se/)
-- [Wget](https://www.gnu.org/software/wget/)
-- [Git](https://git-scm.com/)
-- [zoxide](https://github.com/ajeetdsouza/zoxide)
-- [Eza](https://github.com/eza-community/eza)
-- [Bat](https://github.com/sharkdp/bat)
-- [diff-so-fancy](https://github.com/so-fancy/diff-so-fancy)
-- [nanorc](https://github.com/scopatz/nanorc/)
+## Quick Start
 
-# Supported Operating Systems
-- Ubuntu
-- Debian
-- openSUSE
+```bash
+curl -sSL https://raw.githubusercontent.com/fadhilyori/.dotfiles/main/setup.sh | bash
+```
 
-# How to use
+## Features
 
-This repository contains dotfiles that can be used to customize your development environment. To use this dotfiles repository, follow the steps below:
+### Core Tools
+- **Modern replacements**: eza → ls, bat → cat, rg → grep (with fallbacks)
+- **Git Flow integration**: Complete workflow aliases
+- **Package management**: Smart apt aliases (apti, aptu, aptdu)
+- **FZF integration**: Enhanced fuzzy completion
 
-1. Run the `setup.sh` script using `curl` or `wget` without cloning the repository first. This script will download and install the necessary dotfiles and configurations.
+### Development Stack
+- **Docker**: Container management aliases (dps, drun, dstop)
+- **Node.js**: Enhanced npm commands (ni, nr, ns, nt)
+- **Python**: Virtual environment helpers (venv, vact, vdeact)
+- **Go**: Development workflow aliases (gob, gor, got)
+- **PHP/Laravel**: Artisan shortcuts (art, serve, migrate)
 
-    ```bash
-    curl -sSL https://raw.githubusercontent.com/fadhilyori/dotfiles/main/setup.sh | bash
-    ```
-    Using `wget`:
-    ```bash
-    wget -qO- https://raw.githubusercontent.com/fadhilyori/dotfiles/main/setup.sh | bash
-    ```
+### System Administration
+- **File operations**: Quick disk usage and file management
+- **Network diagnostics**: IP info, port checking, ping utilities
+- **Process monitoring**: Enhanced system visibility
 
-1. Reload your shell or restart your terminal.
-1. After the installation is complete, you can customize the dotfiles and configurations to your liking.
+## Requirements
 
-# License
+- **Ubuntu/Debian** with apt package manager
+- **Bash** shell with sudo access
+- **Internet connection** for package downloads
 
-Licensed under the [MIT License](LICENSE).
+## Installation
+
+### Automated Installation
+```bash
+curl -sSL https://raw.githubusercontent.com/fadhilyori/.dotfiles/main/setup.sh | bash
+```
+
+### Manual Installation
+```bash
+git clone https://github.com/fadhilyori/.dotfiles.git ~/.dotfiles
+cd ~/.dotfiles
+./setup.sh -s    # Auto-setup bash and nano
+exec $SHELL      # Reload shell
+```
+
+## Configuration Setup
+
+### Bash Configuration (.bash_config)
+
+#### Automatic Configuration
+```bash
+./setup.sh -s    # Auto-setup bash and nano configurations
+```
+
+#### Manual Configuration
+Add this to your `~/.bashrc`:
+```bash
+# DOTFILES_CONFIG - Load dotfiles configuration
+if [ -f "$HOME/.dotfiles/.bash_config" ]; then
+    . "$HOME/.dotfiles/.bash_config"
+fi
+```
+
+#### Apply Changes
+```bash
+source ~/.bashrc    # OR
+exec $SHELL         # Start a new shell session
+```
+
+### Nano Editor Configuration (.nanorc)
+
+The nano configuration is located at `.nanorc` in the dotfiles root directory.
+
+#### Apply Nano Configuration
+Add this line to your `~/.nanorc` (create the file if it doesn't exist):
+```bash
+include "~/.dotfiles/.nanorc"
+```
+
+#### Apply Nano Changes
+```bash
+# nano will automatically use the configuration on next launch
+nano ~/.nanorc    # Test the configuration
+```
+
+## Usage Examples
+
+### Git Workflow
+```bash
+gs              # git status
+ga              # git add .
+gc "commit"     # git commit -m
+gp              # git push
+gfs feature     # git flow feature start
+```
+
+### Package Management
+```bash
+apti package    # sudo apt install
+aptu            # sudo apt update && upgrade
+apts query      # apt search
+```
+
+### Docker
+```bash
+dps             # docker ps -a
+drun nginx      # docker run -it --rm nginx
+dstop           # stop all containers
+```
+
+### Development
+```bash
+venv myenv      # python3 -m venv myenv
+vact            # source venv/bin/activate
+ni express      # npm install express
+nr dev          # npm run dev
+gob             # go build
+art serve       # php artisan serve
+```
+
+## Architecture
+
+```
+~/.dotfiles/
+├── .bash_config          # Main config (sourced)
+├── .aliases.d/core.alias # All aliases (sourced)
+├── .config/              # App configs (symlinked)
+├── bin/                  # Utility scripts (symlinked)
+└── .gitconfig           # Git config (symlinked)
+```
+
+**Configuration Loading**: `.bashrc` → `.bash_config` → `.aliases.d/core.alias`
+
+## Troubleshooting
+
+**Aliases not working?**
+```bash
+source ~/.dotfiles/.bash_config
+```
+
+**Stow issues?**
+```bash
+cd ~/.dotfiles
+stow -D . -t "$HOME"  # Remove symlinks
+stow . -t "$HOME" --no-folding  # Recreate
+```
+
+## Customization
+
+**Add aliases**: Edit `~/.dotfiles/.aliases.d/core.alias`
+```bash
+alias myproject='cd ~/projects/my-project'
+alias weather='curl wttr.in'
+```
+
+**Environment variables**: Edit `~/.dotfiles/.bash_config`
+```bash
+export EDITOR=vim
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+## Uninstallation
+
+```bash
+cd ~/.dotfiles && stow -D . -t "$HOME"
+rm -rf ~/.dotfiles
+# Remove dotfiles config line from ~/.bashrc
+```
+
+## License
+
+[MIT License](LICENSE)

@@ -7,18 +7,24 @@
   signingkey = F346FD15636A2B63
 
 [commit]
-  gpgsign = true
+#  gpgsign = true
 
 [includeIf "gitdir:~/Projects/Trustmedis/"]
   path = ~/Projects/Trustmedis/.gitconfig
 
 [core]
-  pager = diff-so-fancy | less --tabs=4 -RFX
+  pager = delta
   longpaths = true
   autocrlf = false
 
 [interactive]
-  diffFilter = diff-so-fancy --patch
+  diffFilter = delta --color-only
+
+[delta]
+  navigate = true
+
+[merge]
+  conflictStyle = zdiff3
 
 [init]
   defaultBranch = main
@@ -72,3 +78,31 @@
   sc = clone --depth 20 # shallow clone
   t = tag -l # list tags
   ta = tag -a # add tag
+
+  # Enhanced Git Flow aliases
+  st = status -sb
+  unstage = reset HEAD --
+  last = log -1 HEAD
+  visual = !gitk
+  graph = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+  cleanup = "!git branch --merged | grep -v '\\*\\|master\\|main\\|develop' | xargs -n 1 git branch -d"
+  flow = !git flow
+
+  # Enhanced log aliases
+  logn = log --oneline --graph --decorate -10
+  logall = log --oneline --graph --decorate --all
+  logsince = log --oneline --graph --decorate --since=
+
+  # Enhanced diff aliases
+  diffstaged = diff --staged
+  diffhead = diff HEAD~
+  difftool = difftool --tool=vimdiff
+
+[push]
+  autoSetupRemote = true
+
+[safe]
+  directory = *
+
+[credential]
+  helper = cache

@@ -1,25 +1,49 @@
 # Comments and blank lines are allowed.
+# This file excludes files from being symlinked by GNU Stow
 
+# Version control files
 RCS
-.+,v
-
+\.+,v
 CVS
-\.\#.+       # CVS conflict files / emacs lock files
+\.\#.+
 \.cvsignore
-
 \.svn
 _darcs
 \.hg
-
 \.git
 \.gitignore
 
-.+~          # emacs backup files
-\#.*\#       # emacs autosave files
+# Editor backup files
+\..+~
+\#.*\#
+\.DS_Store
 
-^/README.*
-^/LICENSE.*
-^/COPYING
+# Documentation and license files
+README.*
+LICENSE.*
+COPYING
+CLAUDE\.md
+MANUAL.*
 
-sysctl.d
-setup.sh
+# Scripts and executable files
+setup\.sh
+
+# Configuration files that should be sourced, not symlinked
+\.bash_config
+
+# System and temporary directories
+sysctl\.d
+\.cache
+tmp
+.*\.tmp
+.*\.bak
+.*\.backup
+
+# Project-specific directories - these should NOT be symlinked
+\.aliases\.d
+
+# Claude AI configuration files
+\.claude
+
+# Nano configuration files
+\.nanorc
