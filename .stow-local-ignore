@@ -44,6 +44,3 @@ tmp
 
 # Claude AI configuration files
 \.claude
-
-# Nano configuration files
-\.nanorc
