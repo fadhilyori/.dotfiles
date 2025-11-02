@@ -77,21 +77,6 @@ source ~/.bashrc    # OR
 exec $SHELL         # Start a new shell session
 ```
 
-### Nano Editor Configuration (.nanorc)
-
-The nano configuration is located at `.nanorc` in the dotfiles root directory.
-
-#### Apply Nano Configuration
-Add this line to your `~/.nanorc` (create the file if it doesn't exist):
-```bash
-include "~/.dotfiles/.nanorc"
-```
-
-#### Apply Nano Changes
-```bash
-# nano will automatically use the configuration on next launch
-nano ~/.nanorc    # Test the configuration
-```
 
 ## Usage Examples
 
