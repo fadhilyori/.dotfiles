@@ -18,14 +18,14 @@ set backupdir ~/.cache/nano/backups/    # The location of the backups.
 # Enable mouse support
 set mouse
 
-# Enhanced color schemes
-set errorcolor bold,red,yellow
-set statuscolor bold,white,blue
-set keycolor cyan
+# Friendly color scheme for dark and light modes
+set errorcolor bold,red,white
+set statuscolor bold,black,white
+set keycolor blue
 set functioncolor green
-set selectedcolor white,green
-set numbercolor magenta
-set titlecolor bold,yellow,blue
+set selectedcolor black,white
+set numbercolor cyan
+set titlecolor bold,blue,white
 
 # Enhanced bracket matching
 set matchbrackets "(<[{)>}]"
