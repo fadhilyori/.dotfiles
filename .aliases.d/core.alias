@@ -9,9 +9,12 @@ else
 	alias ll='ls -al'
 fi
 
-# Enhanced cat replacement (if bat is available)
+# Enhanced cat replacement (if bat/batcat is available)
 if command -v bat >/dev/null 2>&1; then
     alias cat='bat --style=plain --paging=never'
+elif command -v batcat >/dev/null 2>&1; then
+    alias bat='batcat'
+    alias cat='batcat --style=plain --paging=never'
 fi
 
 # Enhanced grep replacement (if ripgrep is available)

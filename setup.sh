@@ -184,7 +184,7 @@ setup_nanorc() {
             touch "$HOME/.nanorc"
         fi
 
-        if grep -q "$HOME/.dotfiles/.nanorc" "$HOME/.nanorc" 2>/dev/null; then
+        if grep -q '\.dotfiles/\.nanorc' "$HOME/.nanorc" 2>/dev/null; then
             log_warning "Dotfiles already configured in .nanorc"
             return 0
         fi
@@ -214,7 +214,10 @@ setup_directories() {
 # Create symlinks
 setup_symlinks() {
     log_info "Creating symlinks"
-    cd "$HOME/.dotfiles"
+    cd "$HOME/.dotfiles" || {
+        log_error "Failed to change to dotfiles directory"
+        return 1
+    }
 
     if stow . -t "$HOME" --no-folding 2>/dev/null; then
         log_success "Symlinks created successfully"

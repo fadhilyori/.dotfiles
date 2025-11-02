@@ -19,10 +19,10 @@ _fzf_comprun() {
   shift
 
   case "$command" in
-    cd)           fzf --preview 'tree -C {} | head -200'   "$@" ;;
+    cd)           fzf --preview '[ -d {} ] && (command -v tree >/dev/null && tree -C {} | head -200 || ls -la {})' "$@" ;;
     export|unset) fzf --preview "echo \"\${!{}:-<unset>}\"" "$@" ;;
     ssh)          fzf --preview 'dig {}'                   "$@" ;;
-    *)            fzf --preview 'bat -n --color=always {}' "$@" ;;
+    *)            fzf --preview '(command -v bat >/dev/null && bat -n --color=always {} || command -v batcat >/dev/null && batcat -n --color=always {} || cat {}) 2>/dev/null' "$@" ;;
   esac
 }
 
