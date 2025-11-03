@@ -57,3 +57,4 @@ if [ -d "$HOME/.dotfiles/.aliases.d" ]; then
     done
 fi
 
+eval "$(starship init bash)"

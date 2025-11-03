@@ -49,6 +49,14 @@ install_packages() {
 install_optional_tools() {
     log_info "Installing optional development tools"
 
+    # Install starship
+    if ! command_exists starship; then
+        log_info "Installing Starship..."
+        sudo apt install -y starship
+    else
+        log_success "Starship already installed"
+    fi
+
     # Install FZF
     if ! command_exists fzf; then
         log_info "Installing FZF..."
