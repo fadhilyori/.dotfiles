@@ -8,11 +8,21 @@ export PATH="$HOME/bin:$HOME/.local/bin:$PATH"
 export NODE_OPTIONS="--max-old-space-size=4096"
 
 # FZF settings
-export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border'
-export FZF_COMPLETION_TRIGGER='~~'
+export FZF_DEFAULT_COMMAND='fdfind --hidden --strip-cwd-prefix --exclude .git'
+export FZF_DEFAULT_OPTS='--height 50% --layout=reverse --border'
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export FZF_ALT_C_COMMAND='fdfind --type d --hidden --strip-cwd-prefix --exclude .git'
 export FZF_COMPLETION_OPTS='--border --info=inline'
 export FZF_COMPLETION_PATH_OPTS='--walker file,dir,follow,hidden'
-export FZF_COMPLETION_DIR_OPTS='--walker dir,follow'
+export FZF_COMPLETION_DIR_OPTS='--walker dir,follow,hidden'
+
+_fzf_compgen_path() {
+  fdfind --hidden --exclude .git . "$1"
+}
+
+_fzf_compgen_dir() {
+  fdfind --type d --hidden --exclude .git . "$1"
+}
 
 _fzf_comprun() {
   local command=$1
@@ -24,6 +34,14 @@ _fzf_comprun() {
     ssh)          fzf --preview 'dig {}'                   "$@" ;;
     *)            fzf --preview '(command -v bat >/dev/null && bat -n --color=always {} || command -v batcat >/dev/null && batcat -n --color=always {} || cat {}) 2>/dev/null' "$@" ;;
   esac
+}
+
+function y() {
+	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
+	yazi "$@" --cwd-file="$tmp"
+	IFS= read -r -d '' cwd < "$tmp"
+	[ -n "$cwd" ] && [ "$cwd" != "$PWD" ] && builtin cd -- "$cwd"
+	rm -f -- "$tmp"
 }
 
 # Set up fzf key bindings and fuzzy completion (only if fzf is available)

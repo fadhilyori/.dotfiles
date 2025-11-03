@@ -96,6 +96,78 @@ install_optional_tools() {
     else
         log_success "dnsutils already installed"
     fi
+
+    # Install FFmpeg
+    if ! command_exists ffmpeg; then
+        log_info "Installing FFmpeg..."
+        sudo apt install -y ffmpeg
+    else
+        log_success "FFmpeg already installed"
+    fi
+
+    # Install 7zip
+    if ! command_exists 7z; then
+        log_info "Installing 7zip..."
+        sudo apt install -y p7zip-full
+    else
+        log_success "7zip already installed"
+    fi
+
+    # Install jq
+    if ! command_exists jq; then
+        log_info "Installing jq..."
+        sudo apt install -y jq
+    else
+        log_success "jq already installed"
+    fi
+
+    # Install poppler-utils
+    if ! command_exists pdftotext; then
+        log_info "Installing poppler-utils..."
+        sudo apt install -y poppler-utils
+    else
+        log_success "poppler-utils already installed"
+    fi
+
+    # Install fd-find
+    if ! command_exists fd; then
+        log_info "Installing fd-find..."
+        sudo apt install -y fd-find
+    else
+        log_success "fd-find already installed"
+    fi
+
+    # Install zoxide
+    if ! command_exists zoxide; then
+        log_info "Installing zoxide..."
+        sudo apt install -y zoxide
+    else
+        log_success "zoxide already installed"
+    fi
+
+    # Install ImageMagick
+    if ! command_exists convert; then
+        log_info "Installing ImageMagick..."
+        sudo apt install -y imagemagick
+    else
+        log_success "ImageMagick already installed"
+    fi
+
+    # Install yazi using snap
+    if ! command_exists yazi; then
+        log_info "Installing yazi..."
+        sudo snap install yazi --classic
+    else
+        log_success "yazi already installed"
+    fi
+
+    # Install Kitty terminal
+    if ! command_exists kitty; then
+        log_info "Installing Kitty terminal..."
+        sudo apt install -y kitty
+    else
+        log_success "Kitty terminal already installed"
+    fi
 }
 
 # Install fonts

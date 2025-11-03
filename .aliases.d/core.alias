@@ -1,3 +1,13 @@
+# icat alias for image previewing in terminal (if kitten is available)
+if command -v kitten >/dev/null 2>&1; then
+    alias icat="kitten icat"
+fi
+
+# Alias fd for fzf integration (if fd is available)
+if command -v fdfind >/dev/null 2>&1; then
+    alias fd='fdfind'
+fi
+
 # Enhanced ls replacement (if eza is available)
 if command -v eza >/dev/null 2>&1; then
 	# Replace ls with eza - enhanced listing with icons, directories first, and header
