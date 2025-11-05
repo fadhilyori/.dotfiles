@@ -42,6 +42,14 @@ if command -v nvim >/dev/null 2>&1; then
     alias vim='nvim'
 fi
 
+# Wayland copy and paste aliases (if wl-clipboard is available)
+if command -v wl-copy >/dev/null 2>&1; then
+    alias copy='wl-copy'
+fi
+if command -v wl-paste >/dev/null 2>&1; then
+    alias paste='wl-paste'
+fi
+
 # Navigation aliases
 alias ..='cd ..'
 alias ...='cd ../..'
