@@ -18,13 +18,16 @@ command_exists() { command -v "$1" >/dev/null 2>&1; }
 
 # Parse arguments
 AUTO_SETUP=false
+PACKAGES_ONLY=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
         -s|--auto-setup) AUTO_SETUP=true; shift ;;
+        -p|--packages-only) PACKAGES_ONLY=true; shift ;;
         -h|--help)
-            echo "Usage: $0 [-s] [-h]"
+            echo "Usage: $0 [-s] [-p] [-h]"
             echo "  -s  Auto-setup bash and nano configurations"
+            echo "  -p  Install packages only (skip stow and dotfiles setup)"
             echo "  -h  Show this help"
             exit 0
             ;;
@@ -309,7 +312,11 @@ setup_symlinks() {
 
 # Main function
 main() {
-    log_info "Starting dotfiles setup"
+    if [ "$PACKAGES_ONLY" = true ]; then
+        log_info "Starting packages-only installation"
+    else
+        log_info "Starting dotfiles setup"
+    fi
 
     # Check dependencies
     local need_packages=false
@@ -330,28 +337,34 @@ main() {
     # Install fonts
     install_fonts
 
-    setup_dotfiles
-    setup_directories
-    setup_bashrc
-    setup_nanorc
-    setup_symlinks
-
-    printf '\n%s\n' "${GREEN}Setup completed!${NC}"
-
-    if [ "$AUTO_SETUP" = true ]; then
-        printf "✅ .bashrc and .nanorc configured automatically\n"
-        printf "Next step: Reload shell with 'exec \$SHELL' or 'source ~/.bashrc'\n"
+    if [ "$PACKAGES_ONLY" = true ]; then
+        printf '\n%s\n' "${GREEN}Packages installation completed!${NC}"
+        printf "✅ Required and optional packages installed successfully\n"
+        printf "💡 Tip: Run without -p flag to setup dotfiles and stow configuration\n"
     else
-        printf "Next steps:\n"
-        printf "1. Add this to ~/.bashrc:\n"
-        printf "   # DOTFILES_CONFIG - Load dotfiles configuration\n"
-        printf "   if [ -f \"\$HOME/.dotfiles/.bash_config\" ]; then\n"
-        printf "       . \"\$HOME/.dotfiles/.bash_config\"\n"
-        printf "   fi\n\n"
-        printf "2. For nano editor, add this to ~/.nanorc:\n"
-        printf "   include \"~/.dotfiles/.nanorc\"\n\n"
-        printf "3. Reload shell with 'exec \$SHELL' or 'source ~/.bashrc'\n"
-        printf "💡 Tip: Use -s flag next time to auto-setup bash and nano\n"
+        setup_dotfiles
+        setup_directories
+        setup_bashrc
+        setup_nanorc
+        setup_symlinks
+
+        printf '\n%s\n' "${GREEN}Setup completed!${NC}"
+
+        if [ "$AUTO_SETUP" = true ]; then
+            printf "✅ .bashrc and .nanorc configured automatically\n"
+            printf "Next step: Reload shell with 'exec \$SHELL' or 'source ~/.bashrc'\n"
+        else
+            printf "Next steps:\n"
+            printf "1. Add this to ~/.bashrc:\n"
+            printf "   # DOTFILES_CONFIG - Load dotfiles configuration\n"
+            printf "   if [ -f \"\$HOME/.dotfiles/.bash_config\" ]; then\n"
+            printf "       . \"\$HOME/.dotfiles/.bash_config\"\n"
+            printf "   fi\n\n"
+            printf "2. For nano editor, add this to ~/.nanorc:\n"
+            printf "   include \"~/.dotfiles/.nanorc\"\n\n"
+            printf "3. Reload shell with 'exec \$SHELL' or 'source ~/.bashrc'\n"
+            printf "💡 Tip: Use -s flag next time to auto-setup bash and nano\n"
+        fi
     fi
 
     log_success "Done!"
